@@ -12,20 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc3f76324391a408d9c0770ca6fcb666, type: 3}
   m_Name: NewWaterFXFeature
   m_EditorClassIdentifier: 
---- !u!114 &-7665490052026071292
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee010e96f09c87c43b98a88f678e911c, type: 3}
-  m_Name: DepthNormalsFeature
-  m_EditorClassIdentifier: 
-  m_Active: 1
---- !u!114 &-6976985589573324092
+--- !u!114 &-6687513548569002743
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -38,9 +25,9 @@ MonoBehaviour:
   m_Name: FullScreenPassRendererFeature
   m_EditorClassIdentifier: 
   m_Active: 1
-  passMaterial: {fileID: 2100000, guid: e69bade699b374d49bbb93d8bc7e8de9, type: 2}
+  passMaterial: {fileID: 2100000, guid: 01b17b0a63f4b424988b2bbcf484c0ed, type: 2}
   injectionPoint: 600
-  requirements: 1
+  requirements: 4
   passIndex: 0
 --- !u!114 &-581655720849944424
 MonoBehaviour:
@@ -94,9 +81,9 @@ MonoBehaviour:
       type: 3}
   m_RendererFeatures:
   - {fileID: -581655720849944424}
-  - {fileID: -7665490052026071292}
-  - {fileID: -6976985589573324092}
-  m_RendererFeatureMap: 98502a21348bedf70407b24369b59e95c472766a92c42c9f
+  - {fileID: 8976555511064893706}
+  - {fileID: -6687513548569002743}
+  m_RendererFeatureMap: 98502a21348bedf70a19996fad21937c09bdee0adc2d31a3
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -151,3 +138,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings:
     material: {fileID: 2100000, guid: 7e6ea000873112847bd146ddb78ac67d, type: 2}
+--- !u!114 &8976555511064893706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb80d5a44c68a694dadbff50508f7ae5, type: 3}
+  m_Name: DepthNormalsFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
