@@ -117,7 +117,7 @@ Shader "Custom/Outline"
                 convolutionMatrixResultNormal = convolutionMatrixResultNormal >= _ThresholdNormal ? 1 : 0;
                 convolutionMatrixResultDepth = convolutionMatrixResultDepth >= _ThresholdDepth ? 1 : 0;
 
-                float edge = convolutionMatrixResultColor;
+                float edge = convolutionMatrixResultNormal;
 
                 return edge == 1 ? half4(0,0,0,0) : half4(1,1,1,0);
             }
