@@ -44,8 +44,8 @@ Shader "Custom/Flat Shading Geometry"
 
         _ReceiveShadows("Receive Shadows", Float) = 1.0
 
-            // Editmode props
-            [HideInInspector] _QueueOffset("Queue offset", Float) = 0.0
+        // Editmode props
+        [HideInInspector] _QueueOffset("Queue offset", Float) = 0.0
     }
 
         SubShader
@@ -160,19 +160,6 @@ Shader "Custom/Flat Shading Geometry"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            struct GeometryOutput
-            {
-                float2 uv                       : TEXCOORD0;
-                float2 uvLM                     : TEXCOORD1;
-                float4 positionWSAndFogFactor   : TEXCOORD2; // xyz: positionWS, w: vertex fog factor
-                half3  normalWS                 : TEXCOORD3;
-
-#ifdef _MAIN_LIGHT_SHADOWS
-                float4 shadowCoord              : TEXCOORD6; // compute shadow coord per-vertex for the main light
-#endif
-                float4 positionCS               : SV_POSITION;
-            };
-
             struct Varyings
             {
                 float2 uv                       : TEXCOORD0;
@@ -185,6 +172,14 @@ Shader "Custom/Flat Shading Geometry"
 #endif
                 float4 positionCS               : SV_POSITION;
             };
+
+            struct GeometryOutput
+            {
+                Varyings v;
+                float3 barycentricCoordinates : TEXCOORD9;
+            };
+
+            float _WireframeThickness;
 
             Varyings LitPassVertex(Attributes input)
             {
@@ -225,34 +220,23 @@ Shader "Custom/Flat Shading Geometry"
             [maxvertexcount(3)]
             void geom(triangle Varyings input[3], inout TriangleStream<GeometryOutput> stream)
             {
-                GeometryOutput vert0 = input[0];
-                GeometryOutput vert1 = input[1];
-                GeometryOutput vert2 = input[2];
+                GeometryOutput vert0;
+                GeometryOutput vert1;
+                GeometryOutput vert2;
                 float3 normal = normalize(cross(
-                    normalize(vert0.positionWSAndFogFactor.xyz - vert1.positionWSAndFogFactor.xyz),
-                    normalize(vert0.positionWSAndFogFactor.xyz - vert2.positionWSAndFogFactor.xyz)
+                    normalize(input[0].positionWSAndFogFactor.xyz - input[1].positionWSAndFogFactor.xyz),
+                    normalize(input[0].positionWSAndFogFactor.xyz - input[2].positionWSAndFogFactor.xyz)
                 ));
 
-                vert0.uv = input[0].uv;
-                vert1.uv = input[1].uv;
-                vert2.uv = input[2].uv;
-                vert0.uvLM = input[0].uvLM;
-                vert1.uvLM = input[1].uvLM;
-                vert2.uvLM = input[2].uvLM;
-                vert0.positionWSAndFogFactor = input[0].positionWSAndFogFactor;
-                vert1.positionWSAndFogFactor = input[1].positionWSAndFogFactor;
-                vert2.positionWSAndFogFactor = input[2].positionWSAndFogFactor;
-#ifdef _MAIN_LIGHT_SHADOWS
-                vert0.shadowCoord = input[0].shadowCoord;
-                vert1.shadowCoord = input[1].shadowCoord;
-                vert2.shadowCoord = input[2].shadowCoord;
-#endif
-                vert0.positionCS = input[0].positionCS;
-                vert1.positionCS = input[1].positionCS;
-                vert2.positionCS = input[2].positionCS;
-                vert0.normalWS = normal;
-                vert1.normalWS = normal;
-                vert2.normalWS = normal;
+                vert0.v = input[0];
+                //vert0.v.normalWS = normal;
+                vert0.barycentricCoordinates = float3(1, 0, 0);
+                vert1.v = input[1];
+                //vert1.v.normalWS = normal;
+                vert1.barycentricCoordinates = float3(0, 1, 0);
+                vert2.v = input[2];
+                //vert2.v.normalWS = normal;
+                vert2.barycentricCoordinates = float3(0, 0, 1);
 
                 stream.Append(vert0);
                 stream.Append(vert1);
@@ -260,11 +244,19 @@ Shader "Custom/Flat Shading Geometry"
                 stream.RestartStrip();
             }
 
-            half4 LitPassFragment(GeometryOutput input) : SV_Target
+            half3 GetAlbedoWithWireframe(half3 albedo, float3 barys, float width, half3 color, float depth) {
+                float3 deltas = fwidth(barys);
+                barys = step(deltas * width, barys);
+                float minBary = min(barys.x, min(barys.y, barys.z));
+                return lerp(color, albedo, minBary);
+            }
+
+            half4 LitPassFragment(GeometryOutput ginput) : SV_Target
             {
                 // Surface data contains albedo, metallic, specular, smoothness, occlusion, emission and alpha
                 // InitializeStandarLitSurfaceData initializes based on the rules for standard shader.
                 // You can write your own function to initialize the surface data of your shader.
+                Varyings input = ginput.v;
                 SurfaceData surfaceData;
                 InitializeStandardLitSurfaceData(input.uv, surfaceData);
 
@@ -307,7 +299,7 @@ Shader "Custom/Flat Shading Geometry"
 
                 // Mix diffuse GI with environment reflections.
                 half3 color = GlobalIllumination(brdfData, bakedGI, surfaceData.occlusion, normalWS, viewDirectionWS);
-
+                color = GetAlbedoWithWireframe(color, ginput.barycentricCoordinates, 0.5, half3(1, 0, 0), input.positionCS.z / input.positionCS.w);
                 // LightingPhysicallyBased computes direct light contribution.
                 color += LightingPhysicallyBased(brdfData, mainLight, normalWS, viewDirectionWS);
 
